@@ -49,7 +49,6 @@ pip install streamlit pandas altair numpy
 
 ### 4. Colocar el Archivo de Datos
 
-Asegúrate de que el archivo CSV esté presente en la raíz del proyecto con el nombre:
 `BBDD ONSV - PERSONAS 2021-2023.xlsx - PERSONAS INVOLUCRADAS.csv`
 
 ### 5. Ejecutar la Aplicación Streamlit
