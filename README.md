@@ -56,9 +56,6 @@ Asegúrate de que el archivo CSV esté presente en la raíz del proyecto con el 
 
 ```bash
 streamlit run app.py
-
-La aplicación se abrirá automáticamente en tu navegador web.
-
 ---
 
 ## 📊 Visualizaciones Clave
@@ -76,10 +73,7 @@ El dashboard presenta cuatro gráficos principales, con un filtro lateral para s
 
 El código (`app.py`) incluye una robusta función de preprocesamiento (`load_data`) que realiza:
 
-* **Corrección de Codificación:** Arreglo de acentos y caracteres especiales mal leídos (`Ã‘` -> `Ñ`, `Ã\x93` -> `Ó`).
-* **Limpieza de Edad:** Reemplazo de 'NO INDICA' por `NaN` y posterior imputación categórica a **'EDAD DESCONOCIDA'** para el análisis de distribución.
-* **Filtro:** Creación de un subconjunto (`df_fallecido`) para análisis focalizado en la gravedad 'FALLECIDO'.
+1. **Corrección de Codificación:** Arreglo de acentos y caracteres especiales mal leídos (`Ã‘` -> `Ñ`, `Ã\x93` -> `Ó`).
+2. **Limpieza de Edad:** Reemplazo de 'NO INDICA' por `NaN` y posterior imputación categórica a 'EDAD DESCONOCIDA' para el análisis de distribución.
+3. **Filtro:** Creación de un subconjunto (`df_fallecido`) para análisis focalizado en la gravedad 'FALLECIDO'.
 
-Al subir este contenido a tu repositorio como `README.md`, GitHub lo formateará automáticamente y tendrás una documentación profesional para tu proyecto.
-
-¿Necesitas ayuda con la licencia o cualquier otro archivo de configuración de GitHub?
