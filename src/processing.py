@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_excel("/content/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
+df = pd.read_excel("/data/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
 
 df.head()
 
