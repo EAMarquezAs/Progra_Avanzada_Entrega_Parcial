@@ -11,8 +11,8 @@ import pandas as pd
 import numpy as np
 
 
-df = pd.read_excel("/data/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
-ubigeo = pd.read_csv("/data/ubigeo_distrito.csv")
+df = pd.read_excel("data/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
+ubigeo = pd.read_csv("data/ubigeo_distrito.csv")
 
 df.head()
 
