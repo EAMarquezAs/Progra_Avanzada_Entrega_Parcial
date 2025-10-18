@@ -7,16 +7,12 @@ Original file is located at
     https://colab.research.google.com/drive/1-nw90hU8dRZH6c0sBcKlkYUyWlDfk3OS
 """
 
-!pip install streamlit
-!pip install pyngrok
-
-from pyngrok import ngrok
-
 import pandas as pd
 import numpy as np
 
 
 df = pd.read_excel("/data/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
+ubigeo = pd.read_csv("/data/ubigeo_distrito.csv")
 
 df.head()
 
@@ -182,3 +178,6 @@ sorted(df['CAUSA'].unique())
 df.drop('TIPO DE VÍA', axis=1, inplace=True)
 df.drop('CÓDIGO DE CARRETERA', axis=1, inplace=True)
 df.info()
+
+"""Obtener latitudes y longitudes"""
+df[['LAT', 'LON']] = df.merge(ubigeo, left_on=['DEPARTAMENTO', 'PROVINCIA', 'DISTRITO'], right_on=['departamento', 'provincia', 'distrito'])[['latitude', 'longitude']]
