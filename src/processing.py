@@ -7,7 +7,13 @@ Original file is located at
     https://colab.research.google.com/drive/1-nw90hU8dRZH6c0sBcKlkYUyWlDfk3OS
 """
 
+!pip install streamlit
+!pip install pyngrok
+
+from pyngrok import ngrok
+
 import pandas as pd
+import numpy as np
 
 
 df = pd.read_excel("/content/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
@@ -77,7 +83,7 @@ df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['-'
 df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['ARGERTINA'], "ARGENTINA")
 df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['BOLIVIA ', 'BOLIVIANA', 'BOLIVIANO'], "BOLIVIA")
 df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['BRASILEÑA'], "BRASIL")
-df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['BRITANICO '], "REINO UNIDO")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['BRITANICO '], "REINO UNIDO") # Assuming Britanico refers to UK
 df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['CHILENA', 'CHILENO'], "CHILE")
 df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['COLOMBIA ', 'COLOMBIANA', 'COLOMBIANO', 'COLOMBIANO '], "COLOMBIA")
 df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['ECUADOR ', 'ECUATORIANO', 'ECUATORIANO '], "ECUADOR")
@@ -93,3 +99,86 @@ df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['VE
 
 
 sorted(df['OTRO PAÍS DE NACIONALIDAD'].unique(), key=lambda x: str(x))
+
+"""Cambiar 'EDAD' a tipo float"""
+
+df['EDAD'] = df['EDAD'].replace('NO INDICA', np.nan) # Cambiar NO INDICA por Nan para poder convertirlo a Float
+df['EDAD'].astype(float)
+df.info()
+
+"""Irregularidades en 'ESTADO LICENCIA'"""
+
+sorted(df['ESTADO LICENCIA'].unique())
+
+df['ESTADO LICENCIA'] = df['ESTADO LICENCIA'].replace(['ANULADA / CONDUCTOR INHABILITADO', 'CANCELADA', 'CONDUCTOR INHABILITADO', 'CANCELADA / CONDUCTOR INHABILITADO'], 'INHABILITADO')
+df['ESTADO LICENCIA'] = df['ESTADO LICENCIA'].replace(['FUGADO', 'NO ESPECIFICA', 'NO REGISTRA', 'SIN DNI IDENTIFICADO'], 'SIN INFORMACIÓN')
+df['ESTADO LICENCIA'] = df['ESTADO LICENCIA'].replace('NO CORRESPONDE', 'SIN LICENCIA')
+
+sorted(df['ESTADO LICENCIA'].unique())
+
+"""Irregularidades en 'CLASE_LICENCIA'"""
+
+sorted(df['CLASE_LICENCIA'].unique(), key=lambda x: str(x))
+
+df['CLASE_LICENCIA'] = df['CLASE_LICENCIA'].replace([0, 'FUGADO', 'NO CONDUCTOR', 'NO CORRESPONDE', 'NO ESPECIFICA', 'NO REGISTRA', 'SIN DNI IDENTIFICADO', 'SIN LICENCIA'], np.nan)
+df['CLASE_LICENCIA'] = df['CLASE_LICENCIA'].replace('b', 'B')
+
+sorted(df['CLASE_LICENCIA'].unique(), key=lambda x: str(x))
+
+"""Irregularidades en 'VEHÍCULO'"""
+
+sorted(df['VEHÍCULO'].unique())
+
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['CAMIONETA PANEL', 'CAMIONETA PICK UP', 'CAMIONETA RURAL'], 'CAMIONETA')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['SEMIREMOLQUE', 'REMOLCADOR-SEMIREMOLQUE'], 'REMOLCADOR')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['TRICICLO MOTORIZADO', 'TRICICLO NO MOTORIZADO', 'TRIMOTO CARGA', 'TRIMOTO PASAJERO'], 'VEHÍCULO DE TRES RUEDAS')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['VEHICULO NO IDENTIFICADO', '¿POSTE?', '¿SEPARADOR CENTRAL?', '¿ÁRBOL?'], 'OTRO')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace('STATION WAGON', 'AUTOMÓVIL')
+
+sorted(df['VEHÍCULO'].unique())
+
+"""Convertir FECHA"""
+
+df['FECHA'] = pd.to_datetime(df['FECHA'], dayfirst=True)
+df.info()
+
+"""Espacios en nombres de columnas"""
+
+df.columns
+
+"""No se utilizará la columna CAUSA, solo CAUSA ESPECÍFICA que ahora se llamará CAUSA"""
+
+df.drop('CAUSA    ', axis=1, inplace=True)
+
+df.rename(columns={'CLASE DE SINIESTRO     ': 'CLASE DE SINIESTRO', 'CAUSA ESPECIFICA     ':'CAUSA'}, inplace=True)
+df.columns
+
+"""Irregularidades en 'CLASE DE SINIESTRO'"""
+
+sorted(df['CLASE DE SINIESTRO'].unique())
+
+df['CLASE DE SINIESTRO'] = df['CLASE DE SINIESTRO'].replace(['ATROPELLO FUGA'], 'ATROPELLO')
+df['CLASE DE SINIESTRO'] = df['CLASE DE SINIESTRO'].replace(['CHOQUE CON OBJETO FIJO', 'CHOQUE FUGA'], 'CHOQUE')
+
+sorted(df['CLASE DE SINIESTRO'].unique())
+
+"""Irregularidades en CAUSA"""
+
+sorted(df['CAUSA'].unique())
+
+df['CAUSA'] = df['CAUSA'].replace(['N/I', 'NO CUENTA CON CAUSA ESPECIFICA', 'NO ESTABLECER EL DERECHO DE PASO'], 'NO ESPECIFICA/NO IDENTIFICADA')
+df['CAUSA'] = df['CAUSA'].replace(['CONDUCIR CON FALLAS DE CARROCERÍA', 'CONDUCIR CON FALLAS DE DIRECCIÓN', 'CONDUCIR CON FALLAS DE FRENOS', 'CONDUCIR CON FALLAS DE NEUMÁTICOS', 'CONDUCIR CON FALLAS DE SUSPENSIÓN', 'CONDUCIR CON FALLAS ELÉCTRICAS'], 'FALLAS MECÁNICAS')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (IMPRUDENCIA DEL CONDUCTOR)', 'OTRO (NEGLIGENCIA DEL CONDUCTOR)'], 'IMPRUDENCIA/NEGLIGENCIA DEL CONDUCTOR')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (IMPRUDENCIA DEL PASAJERO/OCUPANTE)'], 'IMPRUDENCIA DEL PASAJERO/OCUPANTE')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (IMPRUDENCIA DEL PEATÓN)'], 'IMPRUDENCIA DEL PEATÓN')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (INFRAESTRUCTURA Y ENTORNO VIAL)'], 'PROBLEMAS DE INFRAESTRUCTURA/ENTORNO VIAL')
+df['CAUSA'] = df['CAUSA'].replace(['USO DE DISPOSITIVOS MÓVILES Y/O ELECTRÓNICOS', 'USO DE DISPOSITIVOS MÓVILES'], 'USO DE DISPOSITIVOS MÓVILES / ELECTRÓNICOS')
+
+
+sorted(df['CAUSA'].unique())
+
+"""Tipo de Vía y Código de carretera no se usarán"""
+
+df.drop('TIPO DE VÍA', axis=1, inplace=True)
+df.drop('CÓDIGO DE CARRETERA', axis=1, inplace=True)
+df.info()
