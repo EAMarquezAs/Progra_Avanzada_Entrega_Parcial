@@ -135,7 +135,7 @@ sorted(df['VEHÍCULO'].unique())
 
 """Convertir FECHA"""
 
-df['FECHA'] = pd.to_datetime(df['FECHA'], dayfirst=True)
+df['FECHA'] = pd.to_datetime(df['FECHA'], dayfirst=True).dt.date
 df.info()
 
 """Espacios en nombres de columnas"""
