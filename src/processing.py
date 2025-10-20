@@ -1,1 +1,174 @@
+import pandas as pd
+import numpy as np
 
+
+df = pd.read_excel("data/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
+ubigeo = pd.read_csv("data/ubigeo_distrito.csv")
+
+# Número original de datos
+total_sin = df.drop_duplicates(subset="CÓDIGO SINIESTRO").shape[0]
+total_per = df.shape[0]
+
+
+"""# Manejo de Nulos
+
+La columna 'POSEE LICENCIA' tiene varios valores nulos, pero 'ESTADO LICENCIA' no; nos guiaremos por esta última
+"""
+
+df.drop('POSEE LICENCIA', axis=1, inplace=True)
+
+"""Como solo existen 19 registros que no cuentan con información en 'VEHÍCULO', se eliminarán estos registros."""
+
+df.dropna(subset=['VEHÍCULO'], inplace=True)
+
+"""En el caso de 'LUGAR ATENCIÓN LESIONADO' y 'LUGAR DE DEFUNCIÓN', se reemplazarán los valores nulos acorde a la gravedad"""
+
+df.loc[df['GRAVEDAD']=="LESIONADO", 'LUGAR ATENCIÓN LESIONADO'] = df.loc[df['GRAVEDAD']=="LESIONADO", 'LUGAR ATENCIÓN LESIONADO'].fillna("SIN INFORMACIÓN")
+df['LUGAR ATENCIÓN LESIONADO'] = df['LUGAR ATENCIÓN LESIONADO'].fillna("NO SE ENCONTRABA LESIONADO")
+
+df.loc[df['GRAVEDAD']=="FALLECIDO", 'LUGAR DE DEFUNCIÓN'] = df.loc[df['GRAVEDAD']=="FALLECIDO", 'LUGAR DE DEFUNCIÓN'].fillna("SIN INFORMACIÓN")
+df['LUGAR DE DEFUNCIÓN'] = df['LUGAR DE DEFUNCIÓN'].fillna("NO HA FALLECIDO")
+
+
+"""Para el caso de nacionalidad, se reemplazará los valores nulos por 'SIN INFORMACIÓN' para los gráficos."""
+
+df['PAÍS DE NACIONALIDAD'] = df['PAÍS DE NACIONALIDAD'].fillna("SIN INFORMACIÓN")
+
+
+"""Para el caso de otra nacionalidad, se reemplazará los valores nulos por 'SIN INFORMACIÓN' cuando la nacionalidad no es peruana."""
+
+df.loc[df['PAÍS DE NACIONALIDAD']!='PERÚ', 'OTRO PAÍS DE NACIONALIDAD'] = df.loc[df['PAÍS DE NACIONALIDAD']!='PERÚ', 'OTRO PAÍS DE NACIONALIDAD'].fillna("SIN INFORMACIÓN")
+
+
+"""En el caso de '¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?', se reemplazará los nulos por 'SIN INFORMACIÓN' cuando tampoco hay información en el resultado.
+
+# PREGUNTAR SI PODEMOS LLENARLO CON NO
+"""
+
+df.loc[~df['RESULTADO DEL DOSAJE ETÍLICO CUALITATIVO'].isna(), '¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?'] = df.loc[~df['RESULTADO DEL DOSAJE ETÍLICO CUALITATIVO'].isna(), '¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?'].fillna("SI")
+df['¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?'] = df['¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?'].fillna("SIN INFORMACIÓN")
+
+
+"""En el caso del resultado del dosaje etílico cualitativo, solo se rellenará los nulos cuando se hizo el dosaje."""
+
+df.loc[df['¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?']=='SI', 'RESULTADO DEL DOSAJE ETÍLICO CUALITATIVO'] = df.loc[df['¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?']=='SI', 'RESULTADO DEL DOSAJE ETÍLICO CUALITATIVO'].fillna("NO REGISTRADO")
+
+
+"""Como no se tiene el resultado del dosaje etílico cuantitativo saber si se realizó el dosaje no será relevante para este análisis."""
+
+df.drop('¿SE SOMETIÓ A DOSAJE ETÍLICO CUANTITATIVO?', axis=1, inplace=True)
+
+
+"""# Otro Procesamiento de Datos
+
+Irregularidades en los datos de 'OTRO PAÍS DE NACIONALIDAD'
+"""
+
+
+
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['-', '.-------------', 'CONDUCTOR FUGADO', 'CONDUCTOR NO IDENTICADO', 'DESCONOCIDO', 'EXTRANJERO ', 'FUGA', 'FUGADO', 'NN', 'NO EXISTE CONDUCTOR', 'NO IDENTIFICADO', 'NO INDICA', 'NO SE CONOCE', 'NO SE CONOCE POR FUGA', 'NO SE IDENTIFICA', 'NO SE IDENTIFICÓ', 'SE DESCONOCE', 'SE DESCONOCE ', 'SE DESCONOCE POR FUGA', 'SE DESCONOCE, TODA VEZ QUE EL VEHICULO SE DIO A LA FUGA ', 'SE DESCONOSE', 'SIN IDENTIFICAR'], "SIN INFORMACIÓN")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['ARGERTINA'], "ARGENTINA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['BOLIVIA ', 'BOLIVIANA', 'BOLIVIANO'], "BOLIVIA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['BRASILEÑA'], "BRASIL")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['BRITANICO '], "REINO UNIDO") # Assuming Britanico refers to UK
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['CHILENA', 'CHILENO'], "CHILE")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['COLOMBIA ', 'COLOMBIANA', 'COLOMBIANO', 'COLOMBIANO '], "COLOMBIA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['ECUADOR ', 'ECUATORIANO', 'ECUATORIANO '], "ECUADOR")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['FRANCES'], "FRANCIA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['ITALIANO'], "ITALIA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['ALEMANA'], "ALEMANIA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['CANADA'], "CÁNADA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['HAITIANO'], "HAITÍ")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['HOLANDA'], "PAÍSES BAJOS")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['REPUBLICA CHECA'], "REPÚBLICA CHECA")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['MEJICO', 'MEXICANO', 'MEXICO'], "MÉXICO")
+df['OTRO PAÍS DE NACIONALIDAD'] = df['OTRO PAÍS DE NACIONALIDAD'].replace(['VELEZOLANO', 'VENENZUELA', 'VENEOZOLANA ', 'VENEZIUELA', 'VENEZOLANA', 'VENEZOLANO', 'VENEZOLANO ', 'VENEZONALA ', 'VENEZUELA ', 'VENZUELA', 'VFENEZOLANO'], "VENEZUELA")
+
+
+
+
+"""Cambiar 'EDAD' a tipo float"""
+
+df['EDAD'] = df['EDAD'].replace('NO INDICA', np.nan) # Cambiar NO INDICA por Nan para poder convertirlo a Float
+df['EDAD'].astype(float)
+
+
+"""Irregularidades en 'ESTADO LICENCIA'"""
+
+
+
+df['ESTADO LICENCIA'] = df['ESTADO LICENCIA'].replace(['ANULADA / CONDUCTOR INHABILITADO', 'CANCELADA', 'CONDUCTOR INHABILITADO', 'CANCELADA / CONDUCTOR INHABILITADO'], 'INHABILITADO')
+df['ESTADO LICENCIA'] = df['ESTADO LICENCIA'].replace(['FUGADO', 'NO ESPECIFICA', 'NO REGISTRA', 'SIN DNI IDENTIFICADO'], 'SIN INFORMACIÓN')
+df['ESTADO LICENCIA'] = df['ESTADO LICENCIA'].replace('NO CORRESPONDE', 'SIN LICENCIA')
+
+
+
+"""Irregularidades en 'CLASE_LICENCIA'"""
+
+
+
+df['CLASE_LICENCIA'] = df['CLASE_LICENCIA'].replace([0, 'FUGADO', 'NO CONDUCTOR', 'NO CORRESPONDE', 'NO ESPECIFICA', 'NO REGISTRA', 'SIN DNI IDENTIFICADO', 'SIN LICENCIA'], np.nan)
+df['CLASE_LICENCIA'] = df['CLASE_LICENCIA'].replace('b', 'B')
+
+
+
+"""Irregularidades en 'VEHÍCULO'"""
+
+
+
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['CAMIONETA PANEL', 'CAMIONETA PICK UP', 'CAMIONETA RURAL'], 'CAMIONETA')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['SEMIREMOLQUE', 'REMOLCADOR-SEMIREMOLQUE'], 'REMOLCADOR')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['TRICICLO MOTORIZADO', 'TRICICLO NO MOTORIZADO', 'TRIMOTO CARGA', 'TRIMOTO PASAJERO'], 'VEHÍCULO DE TRES RUEDAS')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace(['VEHICULO NO IDENTIFICADO', '¿POSTE?', '¿SEPARADOR CENTRAL?', '¿ÁRBOL?'], 'OTRO')
+df['VEHÍCULO'] = df['VEHÍCULO'].replace('STATION WAGON', 'AUTOMÓVIL')
+
+
+
+"""Convertir FECHA"""
+
+df['FECHA'] = pd.to_datetime(df['FECHA'], dayfirst=True).dt.date
+
+
+"""Espacios en nombres de columnas"""
+
+
+
+"""No se utilizará la columna CAUSA, solo CAUSA ESPECÍFICA que ahora se llamará CAUSA"""
+
+df.drop('CAUSA    ', axis=1, inplace=True)
+
+df.rename(columns={'CLASE DE SINIESTRO     ': 'CLASE DE SINIESTRO', 'CAUSA ESPECIFICA     ':'CAUSA'}, inplace=True)
+
+
+"""Irregularidades en 'CLASE DE SINIESTRO'"""
+
+
+
+df['CLASE DE SINIESTRO'] = df['CLASE DE SINIESTRO'].replace(['ATROPELLO FUGA'], 'ATROPELLO')
+df['CLASE DE SINIESTRO'] = df['CLASE DE SINIESTRO'].replace(['CHOQUE CON OBJETO FIJO', 'CHOQUE FUGA'], 'CHOQUE')
+
+
+
+"""Irregularidades en CAUSA"""
+
+
+
+df['CAUSA'] = df['CAUSA'].replace(['N/I', 'NO CUENTA CON CAUSA ESPECIFICA', 'NO ESTABLECER EL DERECHO DE PASO'], 'NO ESPECIFICA/NO IDENTIFICADA')
+df['CAUSA'] = df['CAUSA'].replace(['CONDUCIR CON FALLAS DE CARROCERÍA', 'CONDUCIR CON FALLAS DE DIRECCIÓN', 'CONDUCIR CON FALLAS DE FRENOS', 'CONDUCIR CON FALLAS DE NEUMÁTICOS', 'CONDUCIR CON FALLAS DE SUSPENSIÓN', 'CONDUCIR CON FALLAS ELÉCTRICAS'], 'FALLAS MECÁNICAS')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (IMPRUDENCIA DEL CONDUCTOR)', 'OTRO (NEGLIGENCIA DEL CONDUCTOR)'], 'IMPRUDENCIA/NEGLIGENCIA DEL CONDUCTOR')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (IMPRUDENCIA DEL PASAJERO/OCUPANTE)'], 'IMPRUDENCIA DEL PASAJERO/OCUPANTE')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (IMPRUDENCIA DEL PEATÓN)'], 'IMPRUDENCIA DEL PEATÓN')
+df['CAUSA'] = df['CAUSA'].replace(['OTRO (INFRAESTRUCTURA Y ENTORNO VIAL)'], 'PROBLEMAS DE INFRAESTRUCTURA/ENTORNO VIAL')
+df['CAUSA'] = df['CAUSA'].replace(['USO DE DISPOSITIVOS MÓVILES Y/O ELECTRÓNICOS', 'USO DE DISPOSITIVOS MÓVILES'], 'USO DE DISPOSITIVOS MÓVILES / ELECTRÓNICOS')
+
+
+
+
+"""Tipo de Vía y Código de carretera no se usarán"""
+
+df.drop('TIPO DE VÍA', axis=1, inplace=True)
+df.drop('CÓDIGO DE CARRETERA', axis=1, inplace=True)
+
+
+"""Obtener latitudes y longitudes"""
+df[['LAT', 'LON']] = df.merge(ubigeo, left_on=['DEPARTAMENTO', 'PROVINCIA', 'DISTRITO'], right_on=['departamento', 'provincia', 'distrito'])[['latitude', 'longitude']]
