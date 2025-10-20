@@ -15,7 +15,8 @@ def update(w1, w2, range=False):
 # Título
 st.set_page_config(page_title="Personas - Siniestros Fatales (2021 - 2023)")
 st.title("Personas Involucradas en Siniestros Fatales (2021 - 2023)")
-st.caption("Fuente: https://www.onsv.gob.pe/estaticos/excel/BBDD%20ONSV%20-%20PERSONAS%202021-2023.xlsx")
+st.caption("Fuente ONSV: https://www.onsv.gob.pe/estaticos/excel/BBDD%20ONSV%20-%20PERSONAS%202021-2023.xlsx")
+st.caption("Fuente UBIGEO: https://github.com/jmcastagnetto/ubigeo-peru-aumentado/blob/main/ubigeo_distrito.csv")
 
 
 # Medidas
