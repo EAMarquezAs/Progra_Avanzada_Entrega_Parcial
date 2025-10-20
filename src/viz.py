@@ -29,7 +29,7 @@ def barchart(df, colx, coly, titlex, titley, sortx=None, sorty=None):
 
 def pie(df, categories, values):
   chart = alt.Chart(df).encode(
-    theta=alt.Theta(f"{values}:Q", stack=True), color=alt.Color(f"{categories}:N")
+    theta=alt.Theta(f"{values}:Q", stack=True), color=alt.Color(f"{categories}:N", scale=alt.Scale(scheme='set1'))
   ).mark_arc(outerRadius=110)
   text = chart.mark_text(radius=140, size=15).encode(text=f"{values}:N")
   return chart+text
