@@ -46,6 +46,15 @@ else:
         filter_tipper = df['TIPO PERSONA'].isin(map(lambda x: x.upper(), tip_per))
 
 
+# Filtro por Causa
+causa_mulsel = st.sidebar.multiselect("Causa", options=map(lambda x: x.capitalize(), df['CAUSA'].unique()),
+                                 placeholder="All")
+if len(causa_mulsel) == 0:
+        filter_causa = True
+else:
+        filter_causa = df['CAUSA'].isin(map(lambda x: x.upper(), causa_mulsel))
+
+
 # Filtro por Fecha
 if 'sliderfecha' not in st.session_state:
         st.session_state.sliderfecha = (datetime.date(2021, 1, 1), datetime.date(2023, 12, 31))
@@ -70,7 +79,7 @@ with open("data/ubigeo_distrito.csv", 'rb') as file:
 
 
 # Todos los filtros
-filters = filter_grav & filter_fecha & filter_sex & filter_tipper
+filters = filter_grav & filter_fecha & filter_sex & filter_tipper & filter_causa
 
 
 # Medidas para Datos Filtrados
