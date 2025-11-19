@@ -96,7 +96,8 @@ def update_data():
                     .insert({
                         "cod_sin": i[0],
                         "fecha": i[3],
-                        "hora": i[4]
+                        "hora": i[4],
+                        "causa": "NO ESPECIFICA/NO IDENTIFICADA"
                     })
                     .execute()
                 )
@@ -107,7 +108,8 @@ def update_data():
                         "lat": i[1],
                         "lon": i[2],
                         "fecha": i[3],
-                        "hora": i[4]
+                        "hora": i[4],
+                        "causa": "NO ESPECIFICA/NO IDENTIFICADA"
                     })
                     .execute()
                 )
