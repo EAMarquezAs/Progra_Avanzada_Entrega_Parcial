@@ -41,43 +41,48 @@ def extraer_coordenadas(s: str):
         return match_coords.group(1)+"|"+match_coords.group(2)
     
 
-# Recolección de los datos
+def recolectar_data():
+    # Recolección de los datos
 
-url = "https://sgonorte.bomberosperu.gob.pe/24horas"
-r = requests.get(url)
-if r.status_code != 200:
-    raise Exception("Error al acceder a los datos")
-soup = BeautifulSoup(r.text)
+    url = "https://sgonorte.bomberosperu.gob.pe/24horas"
+    r = requests.get(url)
+    if r.status_code != 200:
+        raise Exception("Error al acceder a los datos")
+    soup = BeautifulSoup(r.text)
 
-x = soup.find("thead").find_all("th")
-columns = list(map(lambda s: s.string, x[1:-2]))
+    x = soup.find("thead").find_all("th")
+    columns = list(map(lambda s: s.string, x[1:-2]))
 
-x = soup.find("tbody").find_all("tr")
-data = list(map(lambda s: s.find_all("td"), x))
-data = list(map(get_values, data))
+    x = soup.find("tbody").find_all("tr")
+    data = list(map(lambda s: s.find_all("td"), x))
+    data = list(map(get_values, data))
 
 
-df = pd.DataFrame(data, columns=columns)
+    df = pd.DataFrame(data, columns=columns)
 
-df = filtrar_accidentes_de_transito(df)
+    df = filtrar_accidentes_de_transito(df)
 
-df["coords"] = df["Dirección / Distrito"].apply(extraer_coordenadas)
-df[["lat", "lon"]] = df["coords"].str.split("|", expand=True)
-df["lat"] = df["lat"].astype(float)
-df["lon"] = df["lon"].astype(float)
-df.drop(columns="coords", inplace=True)
+    df["coords"] = df["Dirección / Distrito"].apply(extraer_coordenadas)
+    df[["lat", "lon"]] = df["coords"].str.split("|", expand=True)
+    df["lat"] = df["lat"].astype(float)
+    df["lon"] = df["lon"].astype(float)
+    df.drop(columns="coords", inplace=True)
 
-df['fecha'] = df["Fecha y hora"].str[:10]
-# Para que esté en formato YYYY-MM-DD
-df['fecha'] = pd.to_datetime(df['fecha'], dayfirst=True).dt.date
-df['fecha'] = df["fecha"].astype(str)
+    df['fecha'] = df["Fecha y hora"].str[:10]
+    # Para que esté en formato YYYY-MM-DD
+    df['fecha'] = pd.to_datetime(df['fecha'], dayfirst=True).dt.date
+    df['fecha'] = df["fecha"].astype(str)
 
-df["hora"] = df["Fecha y hora"].str[-13:]
-df['hora'] = pd.to_datetime(df['hora'], dayfirst=True).dt.hour
+    df["hora"] = df["Fecha y hora"].str[-13:]
+    df['hora'] = pd.to_datetime(df['hora'], dayfirst=True).dt.hour
+
+    return df
 
 
 # Inserción de los datos al Supabase
 def update_data():
+    df = recolectar_data()
+
     url = "https://ntkbropqoaliyvoziqyz.supabase.co"
     apikey = "sb_publishable_ChXTotbmNNA7RyEOcPrZEw_deMjmAbX"
     supabase = create_client(url, apikey)
@@ -115,4 +120,3 @@ def update_data():
                 )
         except PostgrestAPIError:
             continue
-
