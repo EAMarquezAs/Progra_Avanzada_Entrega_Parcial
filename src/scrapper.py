@@ -72,6 +72,9 @@ df['fecha'] = df["Fecha y hora"].str[:10]
 df['fecha'] = pd.to_datetime(df['fecha'], dayfirst=True).dt.date
 df['fecha'] = df["fecha"].astype(str)
 
+df["hora"] = df["Fecha y hora"].str[-13:]
+df['hora'] = pd.to_datetime(df['hora'], dayfirst=True).dt.hour
+
 
 # Inserción de los datos al Supabase
 def update_data():
@@ -79,7 +82,7 @@ def update_data():
     apikey = "sb_publishable_ChXTotbmNNA7RyEOcPrZEw_deMjmAbX"
     supabase = create_client(url, apikey)
     
-    values_list = df[["Nro Parte", "lat", "lon", "fecha"]].values.tolist()
+    values_list = df[["Nro Parte", "lat", "lon", "fecha", "hora"]].values.tolist()
 
     if len(values_list) == 0:
         return None
@@ -92,7 +95,8 @@ def update_data():
                 r = (supabase.table("siniestros")
                     .insert({
                         "cod_sin": i[0],
-                        "fecha": i[3]
+                        "fecha": i[3],
+                        "hora": i[4]
                     })
                     .execute()
                 )
@@ -102,7 +106,8 @@ def update_data():
                         "cod_sin": i[0],
                         "lat": i[1],
                         "lon": i[2],
-                        "fecha": i[3]
+                        "fecha": i[3],
+                        "hora": i[4]
                     })
                     .execute()
                 )
