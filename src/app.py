@@ -98,6 +98,7 @@ slider_fecha = st.sidebar.slider(label='Fecha', min_value=datetime.date(2021, 1,
 box_fecha = st.sidebar.date_input(label="", min_value=datetime.date(2021, 1, 1), max_value=datetime.date.today(),
                                 key='boxfecha', on_change=update, args=('sliderfecha', 'boxfecha', True))
 filter_fecha = (df['fecha'] >= slider_fecha[0]) & (df['fecha'] <= slider_fecha[1])
+filter_fecha_sin = (df_siniestros['fecha'] >= slider_fecha[0]) & (df_siniestros['fecha'] <= slider_fecha[1])
 
 
 # Descargar archivos originales
@@ -120,7 +121,7 @@ st.write("Número de Datos con Filtros Aplicados")
 col1, col2, col3 = st.columns(3)
 col1.metric(label="Total de Personas", value=df.loc[filters].shape[0])
 col2.metric(label="Total de Siniestros (base ONSV)", value=df.loc[filters].drop_duplicates(subset="cod_sin").shape[0])
-col3.metric(label="Total de Siniestros (base Bomberos)", value=df_siniestros.loc[(pd.to_datetime(df_siniestros["fecha"]).dt.year>=2024) & filter_causa_sin].shape[0])
+col3.metric(label="Total de Siniestros (base Bomberos)", value=df_siniestros.loc[(pd.to_datetime(df_siniestros["fecha"]).dt.year>=2024) & filter_causa_sin & filter_fecha_sin].shape[0])
 st.divider()
 
 
@@ -144,7 +145,7 @@ st.altair_chart(viz.hist(df.loc[filters], 'edad', 'Edad', 'Número de Personas')
 
 
 # Mapas
-map_sin = viz.mapa(df_siniestros.loc[(pd.to_datetime(df_siniestros["fecha"]).dt.year>=2024) & filter_causa_sin])
+map_sin = viz.mapa(df_siniestros.loc[(df_siniestros["fecha"] >= datetime.date.today() - datetime.timedelta(days=1)) & filter_causa_sin])
 st.header(f"Mapa de Accidentes de Tránsito (últimas 24 horas)")
 st.components.v1.html(folium.Figure().add_child(map_sin).render(), height=500)
 
@@ -156,4 +157,4 @@ st.components.v1.html(folium.Figure().add_child(map_per).render(), height=500)
 # Dataframe
 # Dataframe
 st.header("Tabla Filtrada")
-st.dataframe((pd.concat([df, df_siniestros.loc[(pd.to_datetime(df_siniestros["fecha"]).dt.year>=2024)]])).loc[filters])
+st.dataframe((pd.concat([df, df_siniestros.loc[(pd.to_datetime(df_siniestros["fecha"]).dt.year>=2024) & filter_fecha_sin & filter_causa_sin]])).loc[filters])
