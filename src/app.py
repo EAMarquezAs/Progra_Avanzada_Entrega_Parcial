@@ -1,8 +1,23 @@
 import streamlit as st
 import folium
-from processing import df, total_per, total_sin
 import datetime
+import pandas as pd
 import viz
+import requests
+from scrapper import update_data
+
+
+def get_data(table:str = "personas", **kwargs) -> pd.DataFrame:
+    url = "https://ntkbropqoaliyvoziqyz.supabase.co/rest/v1/"
+    headers = {
+        "apikey": "sb_publishable_ChXTotbmNNA7RyEOcPrZEw_deMjmAbX",
+        "Authorization": "Bearer sb_publishable_ChXTotbmNNA7RyEOcPrZEw_deMjmAbX"
+    }
+    kwargs.setdefault("select", "*, ...vehiculos!inner(*, ...siniestros!inner(*))")
+    r = requests.get(url=url+table, headers=headers, params=kwargs)
+    if r.status_code != 200:
+        raise Exception("Hubo un error en la recolección de datos")
+    return pd.DataFrame(r.json())
 
 
 def update(w1, w2, range=False):
@@ -10,6 +25,11 @@ def update(w1, w2, range=False):
         st.session_state[w1] = st.session_state[w2]
     else:
         st.session_state[w1] = st.session_state[w1]
+
+
+# Get Dataframe
+df = get_data()
+df["fecha"] = pd.to_datetime(df["fecha"]).dt.date
 
 
 # Título
@@ -22,38 +42,38 @@ st.caption("Fuente UBIGEO: https://github.com/jmcastagnetto/ubigeo-peru-aumentad
 # Medidas
 st.write("Número de Datos Antes de Procesamiento")
 col1, col2 = st.columns(2)
-col1.metric(label="Total de Personas", value=total_per)
-col2.metric(label="Total de Siniestros", value=total_sin)
+col1.metric(label="Total de Personas", value=18464)
+col2.metric(label="Total de Siniestros", value=6705)
 
 
 # Filtro por Gravedad
-grav_pills = st.sidebar.pills("Gravedad", options=map(lambda x: x.capitalize(), df['GRAVEDAD'].unique()),
-                        selection_mode='multi', default=map(lambda x: x.capitalize(), df['GRAVEDAD'].unique()))
-filter_grav = df['GRAVEDAD'].isin(map(lambda x: x.upper(), grav_pills))
+grav_pills = st.sidebar.pills("Gravedad", options=map(lambda x: x.capitalize(), df['gravedad'].unique()),
+                        selection_mode='multi', default=map(lambda x: x.capitalize(), df['gravedad'].unique()))
+filter_grav = df['gravedad'].isin(map(lambda x: x.upper(), grav_pills))
 
 
 # Filtro por Sexo
-sex_radio = st.sidebar.segmented_control("Sexo", options=map(lambda x: x.capitalize(), df['SEXO'].unique()), selection_mode='multi',
-                                 default=map(lambda x: x.capitalize(), df['SEXO'].unique()))
-filter_sex = df['SEXO'].isin(map(lambda x: x.upper(), sex_radio))
+sex_radio = st.sidebar.segmented_control("Sexo", options=map(lambda x: x.capitalize(), df['sexo'].unique()), selection_mode='multi',
+                                 default=map(lambda x: x.capitalize(), df['sexo'].unique()))
+filter_sex = df['sexo'].isin(map(lambda x: x.upper(), sex_radio))
 
 
 # Filtro por Tipo Persona
-tip_per = st.sidebar.multiselect("Tipo de Persona", options=map(lambda x: x.capitalize(), df['TIPO PERSONA'].unique()),
+tip_per = st.sidebar.multiselect("Tipo de Persona", options=map(lambda x: x.capitalize(), df['tipo_per'].unique()),
                                  placeholder="All")
 if len(tip_per) == 0:
         filter_tipper = True
 else:
-        filter_tipper = df['TIPO PERSONA'].isin(map(lambda x: x.upper(), tip_per))
+        filter_tipper = df['tipo_per'].isin(map(lambda x: x.upper(), tip_per))
 
 
 # Filtro por Causa
-causa_mulsel = st.sidebar.multiselect("Causa", options=map(lambda x: x.capitalize(), df['CAUSA'].unique()),
+causa_mulsel = st.sidebar.multiselect("Causa", options=map(lambda x: x.capitalize(), df['causa'].unique()),
                                  placeholder="All")
 if len(causa_mulsel) == 0:
         filter_causa = True
 else:
-        filter_causa = df['CAUSA'].isin(map(lambda x: x.upper(), causa_mulsel))
+        filter_causa = df['causa'].isin(map(lambda x: x.upper(), causa_mulsel))
 
 
 # Filtro por Fecha
@@ -65,7 +85,11 @@ slider_fecha = st.sidebar.slider(label='Fecha', min_value=datetime.date(2021, 1,
                                 key='sliderfecha', on_change=update, args=('boxfecha', 'sliderfecha', True))
 box_fecha = st.sidebar.date_input(label="", min_value=datetime.date(2021, 1, 1), max_value=datetime.date(2023, 12, 31),
                                 key='boxfecha', on_change=update, args=('sliderfecha', 'boxfecha', True))
-filter_fecha = (df['FECHA'] >= slider_fecha[0]) & (df['FECHA'] <= slider_fecha[1])
+filter_fecha = (df['fecha'] >= slider_fecha[0]) & (df['fecha'] <= slider_fecha[1])
+
+
+# Botón para actualizar
+st.sidebar.button("Actualizar datos", on_click=update_data)
 
 
 # Descargar archivos originales
@@ -87,32 +111,32 @@ filters = filter_grav & filter_fecha & filter_sex & filter_tipper & filter_causa
 st.write("Número de Datos con Filtros Aplicados")
 col1, col2 = st.columns(2)
 col1.metric(label="Total de Personas", value=df.loc[filters].shape[0])
-col2.metric(label="Total de Siniestros", value=df.loc[filters].drop_duplicates(subset="CÓDIGO SINIESTRO").shape[0])
+col2.metric(label="Total de Siniestros", value=df.loc[filters].drop_duplicates(subset="cod_sin").shape[0])
 st.divider()
 
 
 # Top Departamentos
 st.header(f"Top 10 Departamentos con más Personas Involucradas en Siniestros Fatales")
-top_dep = df.loc[filters].groupby(by='DEPARTAMENTO').count().reset_index()
-top_dep = top_dep.nlargest(10, columns='CÓDIGO PERSONA')
-st.altair_chart(viz.barchart(top_dep, 'CÓDIGO PERSONA', 'DEPARTAMENTO', 'Número de Personas', 'Departamento', sorty='-x'))
+top_dep = df.loc[filters].groupby(by='departamento').count().reset_index()
+top_dep = top_dep.nlargest(10, columns='cod_per')
+st.altair_chart(viz.barchart(top_dep, 'cod_per', 'departamento', 'Número de Personas', 'Departamento', sorty='-x'))
 
 
 # Tipo de vehículo
 st.header(f"Distribución de Personas Involucradas en Siniestros Fatales por Tipo de Vehículo")
-veh = df.loc[filters].groupby(by='VEHÍCULO').count().reset_index() 
-st.altair_chart(viz.barchart(veh, 'VEHÍCULO', 'CÓDIGO PERSONA', 'Tipo de Vehículo', 'Número de Personas', sortx='-y'))
+veh = df.loc[filters].groupby(by='vehiculo').count().reset_index() 
+st.altair_chart(viz.barchart(veh, 'vehiculo', 'cod_per', 'Tipo de Vehículo', 'Número de Personas', sortx='-y'))
 
 
 # Tipo de Siniestro
 st.header(f"Personas Involucradas en Siniestros Fatales por Clase de Siniestro")
-tip_sin = df.loc[filters].groupby(by='CLASE DE SINIESTRO').count().reset_index()
-st.altair_chart(viz.pie(tip_sin, 'CLASE DE SINIESTRO', 'CÓDIGO PERSONA'))
+tip_sin = df.loc[filters].groupby(by='clase_sin').count().reset_index()
+st.altair_chart(viz.pie(tip_sin, 'clase_sin', 'cod_per'))
 
 
 # Edad
 st.header(f"Distribución de la Edad Personas Involucradas en Siniestros Fatales por Clase de Siniestro")
-st.altair_chart(viz.hist(df.loc[filters], 'EDAD', 'Edad', 'Número de Personas'))
+st.altair_chart(viz.hist(df.loc[filters], 'edad', 'Edad', 'Número de Personas'))
 
 
 # Mapa
