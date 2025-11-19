@@ -172,3 +172,34 @@ df.drop('CÓDIGO DE CARRETERA', axis=1, inplace=True)
 
 """Obtener latitudes y longitudes"""
 df[['LAT', 'LON']] = df.merge(ubigeo, left_on=['DEPARTAMENTO', 'PROVINCIA', 'DISTRITO'], right_on=['departamento', 'provincia', 'distrito'])[['latitude', 'longitude']]
+
+
+# Dividir en las tablas que se subiran a Supabase
+df_siniestros = df.copy()[["CÓDIGO SINIESTRO", "DEPARTAMENTO", "PROVINCIA", "DISTRITO", "FECHA", "DIA", "HORA", "CLASE DE SINIESTRO", "CAUSA", "RED VIAL", "LAT", "LON"]]
+df_vehiculos = df.copy()[["CÓDIGO VEHÍCULO", "VEHÍCULO", "CÓDIGO SINIESTRO"]]
+df_personas = df.copy()[["CÓDIGO PERSONA", "TIPO PERSONA", "GRAVEDAD", "LUGAR ATENCIÓN LESIONADO", "LUGAR DE DEFUNCIÓN", "SITUACIÓN DE PERSONA", "PAÍS DE NACIONALIDAD", "EDAD",
+                         "SEXO", "ESTADO LICENCIA", "CLASE_LICENCIA", "¿SE SOMETIÓ A DOSAJE ETÍLICO CUALITATIVO?", "RESULTADO DEL DOSAJE ETÍLICO CUALITATIVO",
+                         "CÓDIGO VEHÍCULO"]]
+
+
+# Quitar duplicados
+df_siniestros.drop_duplicates("CÓDIGO SINIESTRO", inplace=True)
+
+df_vehiculos.drop_duplicates("CÓDIGO VEHÍCULO", inplace=True)
+
+df_personas.drop_duplicates("CÓDIGO PERSONA", keep=False, inplace=True) # Parece que hubo errores en la inserción de algunos datos, se borrarán estos datos
+
+
+# Renombrar columnas para que coincida con el schema en Supabase
+df_siniestros.columns = ["cod_sin", "departamento", "provincia", "distrito", "fecha", "dia", "hora", "clase_sin", "causa",
+                         "red_vial", "lat", "lon"]
+df_vehiculos.columns = ["cod_veh", "vehiculo", "cod_sin"]
+df_personas.columns = ["cod_per", "tipo_per", "gravedad", "lugar_atencion", "lugar_defuncion", "situacion",
+                       "pais_nacionalidad", "edad", "sexo", "estado_licencia", "clase_licencia", "dosaje_cualitativo",
+                       "resultado_dosaje", "cod_veh"]
+
+
+# Guardar como csv que se subiran a Supabase
+df_siniestros.to_csv("siniestros.csv", index=False)
+df_vehiculos.to_csv("vehiculos.csv", index=False)
+df_personas.to_csv("personas.csv", index=False)
