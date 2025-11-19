@@ -3,15 +3,14 @@ from folium.plugins import MarkerCluster
 import matplotlib.pyplot as plt
 import altair as alt
 import pandas as pd
-from processing import df
 
 
 def mapa(df):
-  map = folium.Map(location=(df['LAT'].mean(), df['LON'].mean()), zoom_start=5)
+  map = folium.Map(location=(df['lat'].mean(), df['lon'].mean()), zoom_start=5)
   cluster = MarkerCluster().add_to(map)
   for index, row in df.iterrows():
-    if not pd.isna(row['LAT']) and not pd.isna(row['LON']):
-      folium.Marker(location=[row['LAT'], row['LON']]).add_to(cluster)
+    if not pd.isna(row['lat']) and not pd.isna(row['lon']):
+      folium.Marker(location=[row['lat'], row['lon']]).add_to(cluster)
   return map
 
 
