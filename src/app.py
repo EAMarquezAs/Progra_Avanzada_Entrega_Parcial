@@ -90,12 +90,12 @@ else:
 
 # Filtro por Fecha
 if 'sliderfecha' not in st.session_state:
-        st.session_state.sliderfecha = (datetime.date(2021, 1, 1), datetime.date(2023, 12, 31))
+        st.session_state.sliderfecha = (datetime.date(2021, 1, 1), datetime.date.today())
 if 'boxfecha' not in st.session_state:
-        st.session_state.boxfecha = (datetime.date(2021, 1, 1), datetime.date(2023, 12, 31))
-slider_fecha = st.sidebar.slider(label='Fecha', min_value=datetime.date(2021, 1, 1), max_value=datetime.date(2023, 12, 31), 
+        st.session_state.boxfecha = (datetime.date(2021, 1, 1), datetime.date.today())
+slider_fecha = st.sidebar.slider(label='Fecha', min_value=datetime.date(2021, 1, 1), max_value=datetime.date.today(), 
                                 key='sliderfecha', on_change=update, args=('boxfecha', 'sliderfecha', True))
-box_fecha = st.sidebar.date_input(label="", min_value=datetime.date(2021, 1, 1), max_value=datetime.date(2023, 12, 31),
+box_fecha = st.sidebar.date_input(label="", min_value=datetime.date(2021, 1, 1), max_value=datetime.date.today(),
                                 key='boxfecha', on_change=update, args=('sliderfecha', 'boxfecha', True))
 filter_fecha = (df['fecha'] >= slider_fecha[0]) & (df['fecha'] <= slider_fecha[1])
 
