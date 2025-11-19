@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def mapa(df):
-  map = folium.Map(location=(df['lat'].mean(), df['lon'].mean()), zoom_start=5)
+  map = folium.Map(location=(df['lat'].mean(), df['lon'].mean()), zoom_start=10)
   cluster = MarkerCluster().add_to(map)
   for index, row in df.iterrows():
     if not pd.isna(row['lat']) and not pd.isna(row['lon']):
