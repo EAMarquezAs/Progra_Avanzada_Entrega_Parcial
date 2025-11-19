@@ -5,10 +5,6 @@ import numpy as np
 df = pd.read_excel("data/BBDD ONSV - PERSONAS 2021-2023.xlsx", header=3)
 ubigeo = pd.read_csv("data/ubigeo_distrito.csv")
 
-# Número original de datos
-total_sin = df.drop_duplicates(subset="CÓDIGO SINIESTRO").shape[0]
-total_per = df.shape[0]
-
 
 """# Manejo de Nulos
 
