@@ -154,5 +154,6 @@ st.components.v1.html(folium.Figure().add_child(map_per).render(), height=500)
 
 
 # Dataframe
-st.header("Tabla Filtrada de Personas")
-st.dataframe(df.loc[filters])
+# Dataframe
+st.header("Tabla Filtrada")
+st.dataframe((pd.concat([df, df_siniestros.loc[(pd.to_datetime(df_siniestros["fecha"]).dt.year>=2024)]])).loc[filters])
